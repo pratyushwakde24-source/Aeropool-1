@@ -1,0 +1,7 @@
+{
+  "name": "AeroPool - Smart Airport Ride-Pooling Platform",
+  "description": "Connect with travellers heading your way, share a licensed taxi, and make every airport journey from CSMIA Mumbai more affordable, transparent, and eco-friendly.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
