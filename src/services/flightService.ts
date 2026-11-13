@@ -12,6 +12,8 @@ export const POPULAR_CSMIA_FLIGHTS: FlightDetails[] = [
     gate: 'A4',
     status: 'ON_TIME',
     delayMinutes: 5,
+    isLiveFeed: false,
+    dataSource: 'PUBLISHED_TIMETABLE',
   },
   {
     flightNumber: 'AI 678',
@@ -24,6 +26,8 @@ export const POPULAR_CSMIA_FLIGHTS: FlightDetails[] = [
     gate: 'B12',
     status: 'LANDED',
     delayMinutes: 0,
+    isLiveFeed: false,
+    dataSource: 'PUBLISHED_TIMETABLE',
   },
   {
     flightNumber: 'UK 955',
@@ -36,6 +40,8 @@ export const POPULAR_CSMIA_FLIGHTS: FlightDetails[] = [
     gate: 'B6',
     status: 'DELAYED',
     delayMinutes: 20,
+    isLiveFeed: false,
+    dataSource: 'PUBLISHED_TIMETABLE',
   },
   {
     flightNumber: 'QP 1332',
@@ -48,6 +54,8 @@ export const POPULAR_CSMIA_FLIGHTS: FlightDetails[] = [
     gate: 'Gate 2',
     status: 'ON_TIME',
     delayMinutes: 0,
+    isLiveFeed: false,
+    dataSource: 'PUBLISHED_TIMETABLE',
   },
   {
     flightNumber: 'SG 8169',
@@ -60,6 +68,8 @@ export const POPULAR_CSMIA_FLIGHTS: FlightDetails[] = [
     gate: 'Gate 5',
     status: 'EXPECTED',
     delayMinutes: 0,
+    isLiveFeed: false,
+    dataSource: 'PUBLISHED_TIMETABLE',
   },
   {
     flightNumber: 'EK 504',
@@ -72,6 +82,8 @@ export const POPULAR_CSMIA_FLIGHTS: FlightDetails[] = [
     gate: 'C8',
     status: 'ON_TIME',
     delayMinutes: 5,
+    isLiveFeed: false,
+    dataSource: 'PUBLISHED_TIMETABLE',
   },
   {
     flightNumber: '6E 244',
@@ -84,6 +96,8 @@ export const POPULAR_CSMIA_FLIGHTS: FlightDetails[] = [
     gate: 'A7',
     status: 'ON_TIME',
     delayMinutes: 0,
+    isLiveFeed: false,
+    dataSource: 'PUBLISHED_TIMETABLE',
   },
 ];
 
@@ -100,7 +114,11 @@ export async function lookupCSMIAFlight(flightQuery: string): Promise<FlightDeta
   });
 
   if (found) {
-    return { ...found };
+    return {
+      ...found,
+      isLiveFeed: false,
+      dataSource: 'PUBLISHED_TIMETABLE',
+    };
   }
 
   // If query starts with known airline code, synthesize accurate flight entry
@@ -128,5 +146,7 @@ export async function lookupCSMIAFlight(flightQuery: string): Promise<FlightDeta
     terminal,
     status: 'EXPECTED',
     delayMinutes: 0,
+    isLiveFeed: false,
+    dataSource: 'SYNTHESIZED',
   };
 }

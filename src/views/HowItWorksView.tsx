@@ -66,7 +66,7 @@ export const HowItWorksView: React.FC<HowItWorksViewProps> = ({ onNavigate }) =>
 
           <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl space-y-3">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-purple-600/20 text-purple-400 border border-purple-500/30 flex items-center justify-center font-bold text-xs">
+              <div className="w-8 h-8 rounded-lg bg-cyan-600/20 text-cyan-400 border border-cyan-500/30 flex items-center justify-center font-bold text-xs">
                 4
               </div>
               <h3 className="text-base font-bold text-white">Transparent Fare Splitting (In Paise)</h3>

@@ -1,4 +1,4 @@
-import { FareQuote, DestinationPoint } from '../types';
+import { FareQuote, DestinationPoint, RideType } from '../types';
 
 // Pricing constants in Minor Units (Paise: ₹1 = 100 paise)
 export const PRICING_CONSTANTS = {
@@ -17,7 +17,7 @@ export const PRICING_CONSTANTS = {
 export function calculateRideFare(
   destination: DestinationPoint,
   passengerCount: number = 1,
-  rideType: 'SHARED_POOL' | 'PRIVATE' = 'SHARED_POOL',
+  rideType: RideType = 'SHARED_POOL',
   currentPoolPassengerCount: number = 2
 ): FareQuote {
   const distKm = destination.distanceKmFromCSMIA;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { CheckCircle2, XCircle, Play, RefreshCw, X, ShieldCheck, Zap } from 'lucide-react';
-import { runAllAeroPoolTests, TestResult } from '../tests/testSuite';
+import type { TestResult } from '../tests/testSuite';
 
 interface TestSuiteModalProps {
   isOpen: boolean;
@@ -11,13 +11,17 @@ export const TestSuiteModal: React.FC<TestSuiteModalProps> = ({ isOpen, onClose 
   const [tests, setTests] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
 
-  const executeTests = () => {
+  const executeTests = async () => {
     setIsRunning(true);
-    setTimeout(() => {
-      const results = runAllAeroPoolTests();
+    try {
+      const { runAllAeroPoolTests } = await import('../tests/testSuite');
+      const results = await runAllAeroPoolTests();
       setTests(results);
+    } catch (err) {
+      console.error('Failed to execute tests:', err);
+    } finally {
       setIsRunning(false);
-    }, 400);
+    }
   };
 
   useEffect(() => {

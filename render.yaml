@@ -1,0 +1,62 @@
+# AeroPool — Render Deployment Blueprint
+# Deploys separate Frontend Static Site and Backend Web Service
+
+services:
+  # 1. Privileged Backend Web Service (Node.js Express Server)
+  - type: web
+    name: aeropool-backend
+    env: node
+    plan: starter
+    buildCommand: npm install
+    startCommand: npm run server
+    healthCheckPath: /api/health/status
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: NODE_ENV
+        value: production
+      - key: VITE_OPERATING_MODE
+        sync: false # Set to 'sandbox' or 'production' in Render Dashboard
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: VITE_RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        fromService:
+          type: web
+          name: aeropool-frontend
+          property: host
+
+  # 2. Frontend Client (Single Page React / Vite App)
+  - type: static
+    name: aeropool-frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    envVars:
+      - key: VITE_OPERATING_MODE
+        sync: false # Matches backend operating mode
+      - key: VITE_SUPABASE_URL
+        sync: false
+      - key: VITE_SUPABASE_ANON_KEY
+        sync: false
+      - key: VITE_RAZORPAY_KEY_ID
+        sync: false
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: aeropool-backend
+          property: host

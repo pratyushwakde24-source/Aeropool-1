@@ -37,10 +37,11 @@ export const SafetyModal: React.FC<SafetyModalProps> = ({
     e.preventDefault();
     if (!description.trim()) return;
 
+    const user = db.getState().currentUser;
     db.reportSafetyIncident({
       bookingId,
-      reporterId: db.getState().currentUser.id,
-      reporterRole: db.getState().currentUser.role,
+      reporterId: user?.id || 'unauthenticated-user',
+      reporterRole: user?.role || 'passenger',
       reporterName: passengerName,
       incidentType,
       description,
@@ -51,7 +52,12 @@ export const SafetyModal: React.FC<SafetyModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
       <div className="relative w-full max-w-lg bg-slate-900 border border-red-500/30 rounded-2xl shadow-2xl overflow-hidden flex flex-col text-slate-100">
         {/* Header */}
         <div className="bg-gradient-to-r from-red-600 to-rose-700 p-4 text-white flex items-center justify-between">

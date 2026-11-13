@@ -5,7 +5,7 @@
 
 -- 1. RIDE REQUESTS TABLE
 CREATE TABLE IF NOT EXISTS ride_requests (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   passenger_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
   passenger_name TEXT NOT NULL,
   passenger_phone TEXT,
@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS ride_requests (
   airline TEXT,
   origin_airport TEXT NOT NULL DEFAULT 'BOM',
   terminal TEXT NOT NULL CHECK (terminal IN ('T1', 'T2')),
-  pickup_zone_id UUID REFERENCES pickup_zones(id) ON DELETE SET NULL,
+  pickup_zone_id TEXT REFERENCES pickup_zones(id) ON DELETE SET NULL,
   destination_name TEXT NOT NULL,
   destination_address TEXT,
   destination_corridor TEXT NOT NULL,
@@ -61,6 +61,7 @@ CREATE OR REPLACE FUNCTION cancel_booking_atomic(
 RETURNS JSONB
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = public
 AS $$
 DECLARE
   v_booking bookings%ROWTYPE;

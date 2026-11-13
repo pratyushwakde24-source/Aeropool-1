@@ -1,5 +1,5 @@
 import React from 'react';
-import { Plane, Shield, MapPin, PhoneCall, Mail } from 'lucide-react';
+import { Plane, Shield, MapPin, PhoneCall, Mail, Car } from 'lucide-react';
 
 interface FooterProps {
   onNavigate: (route: string) => void;
@@ -52,8 +52,19 @@ export const Footer: React.FC<FooterProps> = ({ onNavigate }) => {
                 </button>
               </li>
               <li>
+                <button onClick={() => onNavigate('/driver/onboarding')} className="text-cyan-400 font-semibold hover:text-cyan-300 transition flex items-center gap-1.5">
+                  <Car className="w-3.5 h-3.5" />
+                  <span>Drive with AeroPool</span>
+                </button>
+              </li>
+              <li>
                 <button onClick={() => onNavigate('/fleet-partners')} className="hover:text-white transition">
                   Become a Fleet Partner
+                </button>
+              </li>
+              <li>
+                <button onClick={() => onNavigate('/admin')} className="hover:text-sky-400 transition">
+                  Super Admin Console
                 </button>
               </li>
             </ul>

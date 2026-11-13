@@ -1,6 +1,8 @@
 import { RidePool, DestinationPoint, FlightDetails, FareQuote } from '../types';
 import { calculateDetourMetrics, estimateDrivingDistanceKm } from './geoService';
 import { calculateRideFare } from './pricingEngine';
+import { womenOnlyService } from './womenOnlyService';
+import { RideType } from '../types';
 
 export interface PoolMatchCandidate {
   pool: RidePool;
@@ -50,6 +52,9 @@ export function evaluatePoolMatches(
     luggageCount: number;
     maxWaitMinutes: number;
     readyTimeIso: string;
+    rideType?: RideType;
+    isWomenOnlyEligible?: boolean;
+    passengerId?: string;
   },
   weights: MatchingWeights = DEFAULT_WEIGHTS
 ): PoolMatchCandidate[] {
@@ -73,6 +78,35 @@ export function evaluatePoolMatches(
       continue;
     }
 
+    // 4. Strict Ride Category Isolation (Women-Only Pool vs Shared Pool)
+    const requestedType = request.rideType || 'SHARED_POOL';
+    const isPoolWomenOnly = Boolean(pool.isWomenOnlyPool || pool.poolCategory === 'WOMEN_ONLY_POOL');
+
+    if (requestedType === 'WOMEN_ONLY_POOL') {
+      // Pool MUST be a dedicated Women-Only pool
+      if (!isPoolWomenOnly) {
+        continue;
+      }
+      // Passenger MUST be eligible
+      const isEligible = Boolean(
+        request.isWomenOnlyEligible ||
+        (request.passengerId && womenOnlyService.isPassengerEligible(request.passengerId))
+      );
+      if (!isEligible) {
+        continue;
+      }
+      // Every existing passenger in the pool MUST be verified eligible
+      const hasIneligible = pool.passengers.some((p) => p.isWomenOnlyEligible === false);
+      if (hasIneligible) {
+        continue;
+      }
+    } else {
+      // Standard pools MUST NOT match into Women-Only pools
+      if (isPoolWomenOnly) {
+        continue;
+      }
+    }
+
     // Evaluate Departure Window overlap
     const windowStart = new Date(pool.departureWindowStart).getTime();
     const windowEnd = new Date(pool.departureWindowEnd).getTime();
@@ -89,12 +123,13 @@ export function evaluatePoolMatches(
     let maxDetourMins = 0;
     let routeCompatibilityRatio = 0.5;
 
+    // Check target corridor alignment: pools strictly match same corridor
+    const sameCorridor = Boolean(pool.targetCorridor && pool.targetCorridor.toLowerCase() === request.destination.corridor.toLowerCase());
+    if (!sameCorridor && pool.targetCorridor && pool.targetCorridor !== 'All Corridors') {
+      continue;
+    }
+
     if (pool.passengers.length === 0) {
-      // Check target corridor alignment: dedicated pool only matches same corridor
-      const sameCorridor = pool.targetCorridor.toLowerCase() === request.destination.corridor.toLowerCase();
-      if (!sameCorridor && pool.targetCorridor && pool.targetCorridor !== 'All Corridors') {
-        continue;
-      }
       maxDetourKm = 0;
       maxDetourMins = 0;
       routeCompatibilityRatio = 1.0;
@@ -125,7 +160,6 @@ export function evaluatePoolMatches(
     // 5. Compute Weighted Scoring Factor Breakdown:
     // Destination score (0 - 35)
     // Same corridor gives high base; routeCompatibilityRatio scales
-    const sameCorridor = pool.targetCorridor.toLowerCase() === request.destination.corridor.toLowerCase();
     const destFactor = sameCorridor ? Math.max(0.7, routeCompatibilityRatio) : routeCompatibilityRatio;
     const destinationScore = Math.round(destFactor * (weights.destination * 100));
 
@@ -158,7 +192,7 @@ export function evaluatePoolMatches(
     const fareQuote = calculateRideFare(
       request.destination,
       request.seatsNeeded,
-      'SHARED_POOL',
+      requestedType,
       pool.passengers.length + 1
     );
 

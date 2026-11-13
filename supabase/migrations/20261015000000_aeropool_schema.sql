@@ -4,8 +4,7 @@
 -- Launch Airport: Chhatrapati Shivaji Maharaj International Airport (CSMIA BOM)
 -- ============================================================================
 
--- Enable Required Extensions
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+-- Enable Required Extensions (Built-in gen_random_uuid is native in PostgreSQL 13+)
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Clean Enum Definitions
@@ -48,7 +47,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 
 -- 2. ORGANIZATIONS (FLEET OPERATOR TENANTS)
 CREATE TABLE IF NOT EXISTS organizations (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL,
   business_reg_number TEXT UNIQUE NOT NULL,
   contact_email TEXT NOT NULL,
@@ -67,7 +66,7 @@ ALTER TABLE profiles
 
 -- 3. VEHICLES (FLEET ASSETS)
 CREATE TABLE IF NOT EXISTS vehicles (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
   plate_number TEXT UNIQUE NOT NULL,
   make_model TEXT NOT NULL,
@@ -98,7 +97,7 @@ CREATE TABLE IF NOT EXISTS driver_profiles (
 
 -- 5. DRIVER KYC DOCUMENTS
 CREATE TABLE IF NOT EXISTS driver_documents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   driver_id UUID NOT NULL REFERENCES driver_profiles(id) ON DELETE CASCADE,
   document_type TEXT NOT NULL CHECK (document_type IN ('DRIVING_LICENSE', 'VEHICLE_RC', 'COMMERCIAL_PERMIT', 'POLICE_VERIFICATION')),
   document_number TEXT NOT NULL,
@@ -120,7 +119,7 @@ CREATE TABLE IF NOT EXISTS airports (
 );
 
 CREATE TABLE IF NOT EXISTS pickup_zones (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
   airport_id TEXT NOT NULL REFERENCES airports(id) ON DELETE CASCADE,
   terminal_code TEXT NOT NULL CHECK (terminal_code IN ('T1', 'T2')),
   name TEXT NOT NULL,
@@ -131,12 +130,24 @@ CREATE TABLE IF NOT EXISTS pickup_zones (
   longitude DOUBLE PRECISION NOT NULL
 );
 
+-- Seed Reference Airport & Pickup Zones for CSMIA Mumbai
+INSERT INTO airports (id, name, city, iata_code, latitude, longitude)
+VALUES ('BOM', 'Chhatrapati Shivaji Maharaj International Airport', 'Mumbai', 'BOM', 19.0902, 72.8628)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO pickup_zones (id, airport_id, terminal_code, name, pillar, floor, instructions, latitude, longitude)
+VALUES 
+  ('pz-t2-p4-east', 'BOM', 'T2', 'T2 Level P4 East (AeroPool Lounge)', 'Pillar 4 - 6', 'Level P4 Arrival Concourse', 'Exit Gate 5 or 6, take the escalator to P4. Follow AeroPool signs to designated bays.', 19.0972, 72.8752),
+  ('pz-t2-p7-pool', 'BOM', 'T2', 'T2 Level P7 Shared Ride Hub', 'Bay C, Pillar 12', 'Level P7 Multilevel Car Park', 'Cross skywalk to MLCP, take Lift 3 to Level P7. Dedicated taxi pool boarding area.', 19.0965, 72.8739),
+  ('pz-t1-arr-main', 'BOM', 'T1', 'T1 Domestic Arrival Curbside Zone', 'Pillar 3 & 4', 'Ground Floor Arrival', 'Exit Terminal 1 main baggage claim hall. Cross first lane to the designated AeroPool ride bay.', 19.0886, 72.8679)
+ON CONFLICT (id) DO NOTHING;
+
 -- 7. RIDE POOLS
 CREATE TABLE IF NOT EXISTS ride_pools (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   airport_code TEXT NOT NULL REFERENCES airports(id),
   terminal TEXT NOT NULL CHECK (terminal IN ('T1', 'T2')),
-  pickup_zone_id UUID NOT NULL REFERENCES pickup_zones(id),
+  pickup_zone_id TEXT NOT NULL REFERENCES pickup_zones(id),
   target_corridor TEXT NOT NULL,
   departure_window_start TIMESTAMPTZ NOT NULL,
   departure_window_end TIMESTAMPTZ NOT NULL,
@@ -153,7 +164,7 @@ CREATE TABLE IF NOT EXISTS ride_pools (
 
 -- 8. BOOKINGS
 CREATE TABLE IF NOT EXISTS bookings (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   pool_id UUID NOT NULL REFERENCES ride_pools(id) ON DELETE RESTRICT,
   passenger_id UUID NOT NULL REFERENCES profiles(id) ON DELETE RESTRICT,
   flight_number TEXT NOT NULL,
@@ -178,7 +189,7 @@ CREATE TABLE IF NOT EXISTS bookings (
 
 -- 9. PAYMENTS LEDGER
 CREATE TABLE IF NOT EXISTS payments (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   booking_id UUID NOT NULL REFERENCES bookings(id) ON DELETE RESTRICT,
   passenger_id UUID NOT NULL REFERENCES profiles(id) ON DELETE RESTRICT,
   amount_paise INT NOT NULL CHECK (amount_paise > 0),
@@ -195,7 +206,7 @@ CREATE TABLE IF NOT EXISTS payments (
 
 -- 10. SAFETY INCIDENTS & EMERGENCY SOS
 CREATE TABLE IF NOT EXISTS safety_incidents (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   booking_id UUID REFERENCES bookings(id) ON DELETE SET NULL,
   reporter_id UUID NOT NULL REFERENCES profiles(id),
   reporter_name TEXT NOT NULL,
@@ -211,7 +222,7 @@ CREATE TABLE IF NOT EXISTS safety_incidents (
 
 -- 11. SUPPORT TICKETS
 CREATE TABLE IF NOT EXISTS support_tickets (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL REFERENCES profiles(id),
   user_name TEXT NOT NULL,
   user_role user_role NOT NULL,
@@ -225,7 +236,7 @@ CREATE TABLE IF NOT EXISTS support_tickets (
 
 -- 12. IMMUTABLE AUDIT LOGS
 CREATE TABLE IF NOT EXISTS audit_logs (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   actor_id TEXT NOT NULL,
   actor_name TEXT NOT NULL,
   actor_role user_role NOT NULL,

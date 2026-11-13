@@ -36,6 +36,7 @@ This implementation plan structures the development of AeroPool across 8 rigorou
 - [x] Step 4: Intelligent match results display with compatibility score, detour time, seat availability, and fare comparison.
 - [x] Step 5: Booking confirmation and Razorpay checkout modal with minor currency math.
 - [x] Step 6: Active ride view with pickup instructions (e.g., T2 Level P4 Pillar 5) and QR boarding pass.
+- [x] Step 7: Passenger Booking Management & Direct Cancellation (100% full refund policy, structured reason selection, atomic capacity restoration, and printable official GST Credit Note / Refund Receipt).
 
 ---
 
@@ -57,23 +58,32 @@ This implementation plan structures the development of AeroPool across 8 rigorou
 - [x] Driver Dashboard:
   - KYC & document submission (Driving Licence, Commercial Badge, Vehicle RC, Fitness Certificate).
   - Verification workflow with document approval statuses.
+  - Unassigned Dispatch Queue & One-Click Acceptance (available dispatch queue with 80% driver payout preview, terminal bay guidance, and real-time state synchronization).
   - Active ride dispatch queue with stop-by-stop passenger pickup sequence.
   - Trip status state transitions (`DRIVER_EN_ROUTE` -> `ARRIVED_AT_TERMINAL` -> `PASSENGERS_ONBOARD` -> `TRIP_COMPLETED`).
   - Earnings tracker with weekly payouts and commission breakdown.
+- [x] Super Admin Operations:
+  - Manual driver dispatch override for unassigned ride pools.
 - [x] Fleet Operator Portal:
   - Organization profile and fleet compliance metrics.
-  - Vehicle inventory management (Sedan, EV, SUV, XL) with luggage specs.
-  - Driver roster with compliance expiry flags.
-  - Fleet trip monitoring and commission settlement reconciliation.
+  - Multi-vehicle inventory management (Sedan, EV, SUV, XL) with registration, capacity, fuel type, assigned driver, and live status.
+  - Vehicle status transitions (`ACTIVE`, `OFFLINE`, `SERVICING`) with active trip conflict protection.
+  - Driver-vehicle dynamic assignment & unassignment (same tenant enforcement, KYC verification check, reciprocal unbinding, active trip lock).
+  - Weekly Payout Settlements: integer paise accounting (15% platform commission / 85% net payable), idempotent cycle generation, printable itemized tax settlement statement, verified payment guard (`PROCESSING` vs `SETTLED`).
+  - Strict tenant boundary isolation preventing cross-tenant data leakage or mutations.
 
 ---
 
-## Milestone 6 — Live Trip Tracking, Map & Notifications
-- [x] Real-time interactive terminal and route map with pickup zones and vehicle location marker.
-- [x] Live GPS simulation toggle for development/demonstration, clearly labelled as demo data.
-- [x] Real-time state machine tracking for passengers and drivers.
-- [x] Comprehensive notification center with status alerts (Driver Arrived, Flight Delay, Payment Receipt).
-- [x] Emergency SOS & Safety incident reporting system with passenger escalation.
+## Milestone 6 — Live Trip Tracking, Map & Notifications (Completed & Verified)
+- [x] Real-time interactive terminal and route map with pickup zones, vehicle location marker, and glowing SVG breadcrumb polyline.
+- [x] Strict location-source distinction: Real device GPS (`REAL_GPS`) vs explicitly labelled demo coordinates (`SIMULATED_DEMO`) along Mumbai expressway corridors.
+- [x] Browser Geolocation API integration with graceful permission denial, position unavailable, timeout handling, and stale telemetry detection (>120s).
+- [x] Trip-end location privacy: live telemetry sharing ceases and coordinates are strictly redacted when trip is `COMPLETED` or `CANCELLED`; unauthorized non-members blocked.
+- [x] In-app notification center drawer with category filters (`ALL`, `UNREAD`, `TRIP`, `DISPATCH`, `SETTLEMENT`, `FLIGHT`), unread counters, and mark-read/clear controls.
+- [x] Deterministic `eventId` deduplication preventing duplicate alerts when repeated state transitions fire.
+- [x] User-scoped and tenant-isolated notifications preventing cross-passenger and cross-fleet data leakage.
+- [x] Push notification decoupling: explicit disclaimer clarifying in-app center operation while external service-worker push delivery remains pending.
+- [x] Automated tests (Tests 29 & 30) added to test suite; 30/30 tests passing (100%).
 
 ---
 

@@ -11,7 +11,8 @@ const getEnvVar = (key: string): string => {
   return '';
 };
 
-const supabaseUrl = getEnvVar('VITE_SUPABASE_URL');
+const rawSupabaseUrl = getEnvVar('VITE_SUPABASE_URL');
+const supabaseUrl = rawSupabaseUrl.replace(/\/rest\/v1\/?$/, '').replace(/\/+$/, '');
 const supabaseAnonKey = getEnvVar('VITE_SUPABASE_ANON_KEY');
 
 /**
